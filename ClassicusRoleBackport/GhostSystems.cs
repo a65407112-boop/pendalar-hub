@@ -65,7 +65,7 @@ namespace ClassicUs.OfficialRolesBackport
         [ManactorRpc(AssignRpc)]
         private static void OnAssign(byte senderId, byte playerId, byte role)
         {
-            if (!ManactorAPI.IsFromHost(senderId)) return;
+            if (!NetworkAuth.IsFromHost(senderId)) return;
             Assign(playerId, (GhostRoleKind)role, false);
         }
 
@@ -131,7 +131,7 @@ namespace ClassicUs.OfficialRolesBackport
         [ManactorRpc(StartRpc)]
         private static void OnStart(byte senderId, byte targetId, float duration)
         {
-            if (!ManactorAPI.IsFromHost(senderId)) return;
+            if (!NetworkAuth.IsFromHost(senderId)) return;
             Start(targetId, duration);
         }
 
@@ -162,7 +162,7 @@ namespace ClassicUs.OfficialRolesBackport
         [ManactorRpc(EndRpc)]
         private static void OnEnd(byte senderId, byte targetId, bool consumed)
         {
-            if (!ManactorAPI.IsFromHost(senderId)) return;
+            if (!NetworkAuth.IsFromHost(senderId)) return;
             Shields.Remove(targetId);
             var local = PlayerControl.LocalPlayer;
             if (consumed && local?.Data != null && local.Data.PlayerId == targetId)
@@ -315,7 +315,7 @@ namespace ClassicUs.OfficialRolesBackport
         [ManactorRpc(MessageRpc)]
         private static void OnMessage(byte senderId, byte influencerId, byte targetId, byte a, byte b, byte c)
         {
-            if (!ManactorAPI.IsFromHost(senderId)) return;
+            if (!NetworkAuth.IsFromHost(senderId)) return;
             ApplyMessage(influencerId, targetId, a, b, c);
         }
 
