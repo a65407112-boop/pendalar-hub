@@ -61,7 +61,7 @@ namespace ClassicUs.OfficialRolesBackport
             // Active transformations/invisibility end when a meeting starts, matching modern-role pacing.
             try { PhantomSystem.Reset(); } catch { }
             try { ShapeshifterSystem.Reset(); } catch { }
-            try { ScientistSystem.Reset(); } catch { }
+            try { ScientistSystem.ClosePanel(); } catch { }
             try { TrackerSystem.Reset(); } catch { }
             try { RoleAbilities.Reset(); } catch { }
         }
