@@ -54,7 +54,7 @@ namespace ClassicUs.OfficialRolesBackport
             GameEvents.BeforeMurder += GuardianAngelSystem.OnBeforeMurder;
             GameEvents.AfterMurder += OnAfterMurder;
             GameEvents.TaskCompleted += OnTaskCompleted;
-            GameEvents.AtMeeting += JudgeSystem.OnMeeting;
+            GameEvents.AtMeeting += e => JudgeSystem.OnMeeting(e.Meeting);
             GameEvents.AfterMeeting += _ => JudgeSystem.AfterMeeting();
             GameEvents.GameStarted += _ => RuntimeState.ResetForGame();
             GameEvents.GameEnded += _ => RuntimeState.ResetForGame();
