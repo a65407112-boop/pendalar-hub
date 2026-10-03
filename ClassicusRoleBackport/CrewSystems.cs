@@ -299,7 +299,10 @@ namespace ClassicUs.OfficialRolesBackport
         private static readonly Dictionary<byte, int> Tasks = new();
         private static readonly HashSet<byte> Used = new();
         private static MeetingHud _meeting;
-        private static List<byte> _targets = new();
+        private static readonly List<byte> Targets = new();
+        private static int _targetIndex;
+        private static readonly SimpleHudButton NextButton = new();
+        private static readonly SimpleHudButton OverruleButton = new();
 
         public static void OnTask(PlayerControl player)
         {
@@ -312,22 +315,38 @@ namespace ClassicUs.OfficialRolesBackport
         public static void OnMeeting(MeetingHud meeting)
         {
             _meeting = meeting;
+            _targetIndex = 0;
             RebuildTargets();
         }
 
         public static void AfterMeeting()
         {
             _meeting = null;
-            _targets.Clear();
+            Targets.Clear();
+            NextButton.Hide();
+            OverruleButton.Hide();
             Overlay.Hide("JudgeMenu");
         }
 
         private static void RebuildTargets()
         {
-            _targets = new List<byte>();
+            Targets.Clear();
+            var local = PlayerControl.LocalPlayer;
+            byte localId = local?.Data?.PlayerId ?? byte.MaxValue;
             foreach (var p in PlayerControl.AllPlayerControls)
-                if (p != null && p.Data != null && !p.Data.IsDead && !p.Data.Disconnected)
-                    _targets.Add(p.Data.PlayerId);
+            {
+                if (p == null || p.Data == null || p.Data.IsDead || p.Data.Disconnected) continue;
+                if (p.Data.PlayerId == localId) continue;
+                Targets.Add(p.Data.PlayerId);
+            }
+            if (_targetIndex >= Targets.Count) _targetIndex = 0;
+        }
+
+        private static void CycleTarget()
+        {
+            RebuildTargets();
+            if (Targets.Count == 0) return;
+            _targetIndex = (_targetIndex + 1) % Targets.Count;
         }
 
         public static void Tick()
@@ -335,40 +354,64 @@ namespace ClassicUs.OfficialRolesBackport
             var local = PlayerControl.LocalPlayer;
             if (_meeting == null || local?.Data == null || !RoleChecks.Is(local, RoleIds.Judge) || local.Data.IsDead)
             {
+                NextButton.Hide();
+                OverruleButton.Hide();
                 Overlay.Hide("JudgeMenu");
                 return;
             }
 
             byte judgeId = local.Data.PlayerId;
             Tasks.TryGetValue(judgeId, out int done);
+
             if (Used.Contains(judgeId))
             {
+                NextButton.Hide();
+                OverruleButton.Hide();
                 Overlay.Persistent("JudgeMenu", "JUDGE: Overrule already used", 2.45f, 1.25f);
                 return;
             }
 
             if (done < RequiredTasks)
             {
+                NextButton.Hide();
+                OverruleButton.Hide();
                 Overlay.Persistent("JudgeMenu", "JUDGE: Overrule locked (" + done + "/" + RequiredTasks + " tasks)", 2.45f, 1.25f);
                 return;
             }
 
-            if (_targets.Count == 0) RebuildTargets();
-            var lines = new List<string> { "JUDGE OVERRULE - press a number" };
-            int shown = Math.Min(9, _targets.Count);
-            for (int i = 0; i < shown; i++) lines.Add((i + 1) + ": " + Players.Name(_targets[i]));
-            lines.Add("Wrong target = YOU are ejected");
-            Overlay.Persistent("JudgeMenu", string.Join("\n", lines), 2.0f, 1.15f);
-
-            for (int i = 0; i < shown; i++)
+            if (Targets.Count == 0) RebuildTargets();
+            if (Targets.Count == 0)
             {
-                KeyCode key = (KeyCode)((int)KeyCode.Alpha1 + i);
-                if (Input.GetKeyDown(key))
-                {
-                    Request(judgeId, _targets[i]);
-                    break;
-                }
+                NextButton.Hide();
+                OverruleButton.Hide();
+                Overlay.Persistent("JudgeMenu", "JUDGE: no valid target", 2.45f, 1.25f);
+                return;
             }
+
+            if (_targetIndex >= Targets.Count) _targetIndex = 0;
+            byte selected = Targets[_targetIndex];
+            var selectedPlayer = Players.Find(selected);
+            if (selectedPlayer == null || selectedPlayer.Data == null || selectedPlayer.Data.IsDead)
+            {
+                RebuildTargets();
+                if (Targets.Count == 0) return;
+                selected = Targets[_targetIndex];
+            }
+
+            Overlay.Persistent("JudgeMenu",
+                "JUDGE OVERRULE\nSelected: " + Players.Name(selected) +
+                "\nCycle target, then press Overrule\nWrong target = YOU are ejected",
+                2.0f, 1.2f);
+
+            NextButton.Show("JudgeNextTarget", RoleIconFactory.Get("judge_next", new Color(0.75f, 0.75f, 1f, 1f)),
+                AbilityButtonGrid.SlotB, CycleTarget);
+            OverruleButton.Show("JudgeOverrule", RoleIconFactory.Get("judge_overrule", new Color(0.95f, 0.45f, 1f, 1f)),
+                AbilityButtonGrid.SlotA, () =>
+                {
+                    if (Targets.Count == 0) return;
+                    if (_targetIndex >= Targets.Count) _targetIndex = 0;
+                    Request(judgeId, Targets[_targetIndex]);
+                });
         }
 
         private static void Request(byte judgeId, byte targetId)
@@ -392,7 +435,9 @@ namespace ClassicUs.OfficialRolesBackport
             if (Used.Contains(judgeId)) return;
             var judge = Players.Find(judgeId);
             var target = Players.Find(targetId);
-            if (!RoleChecks.Is(judge, RoleIds.Judge) || judge?.Data == null || target?.Data == null || target.Data.IsDead) return;
+            if (!RoleChecks.Is(judge, RoleIds.Judge) || judge?.Data == null || target?.Data == null ||
+                target.Data.IsDead || judgeId == targetId) return;
+
             Tasks.TryGetValue(judgeId, out int done);
             if (done < RequiredTasks) return;
 
@@ -414,6 +459,9 @@ namespace ClassicUs.OfficialRolesBackport
         private static void ApplyResult(byte judgeId, byte ejectedId, bool correct)
         {
             Used.Add(judgeId);
+            NextButton.Hide();
+            OverruleButton.Hide();
+
             var ejected = Players.Find(ejectedId);
             try { ejected?.Exiled(); }
             catch (Exception e) { OfficialRolesPlugin.Log.LogError("Judge Exiled failed: " + e); }
@@ -432,8 +480,12 @@ namespace ClassicUs.OfficialRolesBackport
             Tasks.Clear();
             Used.Clear();
             _meeting = null;
-            _targets.Clear();
+            Targets.Clear();
+            _targetIndex = 0;
+            NextButton.Destroy();
+            OverruleButton.Destroy();
             Overlay.Hide("JudgeMenu");
         }
     }
+
 }
