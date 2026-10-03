@@ -55,19 +55,17 @@ jobs:
           rs = rp.read_text(encoding="utf-8")
           rs = rs.replace("if (!ManactorAPI.IsFromHost(senderId))", "if (!IsFromHostCompat(senderId))")
           marker = "        private static PlayerControl FindPlayer(byte playerId)"
-          helper = """        private static bool IsFromHostCompat(byte senderId)
-        {
-            var client = AmongUsClient.Instance;
-            if (client == null) return false;
-            foreach (var p in PlayerControl.AllPlayerControls)
-            {
-                if (p == null || p.Data == null || p.Data.PlayerId != senderId) continue;
-                return p.OwnerId == client.HostId;
-            }
-            return false;
-        }
-
-"""
+          helper = ("        private static bool IsFromHostCompat(byte senderId)\n"
+                    "        {\n"
+                    "            var client = AmongUsClient.Instance;\n"
+                    "            if (client == null) return false;\n"
+                    "            foreach (var p in PlayerControl.AllPlayerControls)\n"
+                    "            {\n"
+                    "                if (p == null || p.Data == null || p.Data.PlayerId != senderId) continue;\n"
+                    "                return p.OwnerId == client.HostId;\n"
+                    "            }\n"
+                    "            return false;\n"
+                    "        }\n\n")
           if marker not in rs:
               raise SystemExit("Could not locate RoleRegistry FindPlayer marker")
           rs = rs.replace(marker, helper + marker, 1)
