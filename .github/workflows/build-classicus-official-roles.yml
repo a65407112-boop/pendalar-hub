@@ -28,10 +28,9 @@ jobs:
           s = p.read_text(encoding="utf-8")
           if "using System;" not in s:
               s = "using System;\n" + s
-          old = """            var harmony = new Harmony(Guid);
-            harmony.PatchAll();
-            Il2CppInteropCompat.Apply(harmony);"""
-          new = """            var harmony = new Harmony(Guid);
+          import re
+          pattern = r"(?ms)^(?P<i>\s*)var harmony = new Harmony\(Guid\);\s*^\s*harmony\.PatchAll\(\);\s*^\s*Il2CppInteropCompat\.Apply\(harmony\);"
+          replacement = """            var harmony = new Harmony(Guid);
             foreach (var type in typeof(ManuAPIPlugin).Assembly.GetTypes())
             {
                 if (type.GetCustomAttributes(typeof(HarmonyPatch), true).Length == 0) continue;
@@ -45,9 +44,11 @@ jobs:
                 }
             }
             Il2CppInteropCompat.Apply(harmony);"""
-          if old not in s:
-              raise SystemExit("ManuAPI Load() block changed upstream; refusing a blind patch")
-          p.write_text(s.replace(old, new), encoding="utf-8")
+          s2, count = re.subn(pattern, replacement, s, count=1)
+          if count != 1:
+              print(s)
+              raise SystemExit("Could not locate ManuAPI Harmony startup block")
+          p.write_text(s2, encoding="utf-8")
           PY
           dotnet restore vendor/ClassicUs.ManuAPI/ManuAPI/ManuAPI.csproj
           dotnet build vendor/ClassicUs.ManuAPI/ManuAPI/ManuAPI.csproj -c Release --no-restore
