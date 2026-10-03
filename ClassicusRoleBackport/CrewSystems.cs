@@ -53,11 +53,16 @@ namespace ClassicUs.OfficialRolesBackport
             Overlay.Persistent("ScientistVitals", string.Join("\n", lines), 1.8f, 1.35f);
         }
 
+        public static void ClosePanel()
+        {
+            _open = false;
+            Overlay.Hide("ScientistVitals");
+        }
+
         public static void Reset()
         {
             _battery = 8f;
-            _open = false;
-            Overlay.Hide("ScientistVitals");
+            ClosePanel();
         }
     }
 
