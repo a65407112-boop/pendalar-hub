@@ -12,13 +12,19 @@ namespace ClassicUs.OfficialRolesBackport
         {
             if (Cache.TryGetValue(key, out var sprite) && sprite != null) return sprite;
 
+            if (ModernAssets.TryGet(key, out sprite) && sprite != null)
+            {
+                Cache[key] = sprite;
+                return sprite;
+            }
+
             const int s = 64;
             var tex = new Texture2D(s, s, TextureFormat.RGBA32, false);
             for (int y = 0; y < s; y++)
                 for (int x = 0; x < s; x++)
                     tex.SetPixel(x, y, Color.clear);
 
-            // Clean-room geometric role glyphs. No modern-game art is redistributed.
+            // Fallback only. Exact official art is loaded from the user's own modern Among Us installation when available.
             for (int y = 4; y < s - 4; y++)
             {
                 for (int x = 4; x < s - 4; x++)
