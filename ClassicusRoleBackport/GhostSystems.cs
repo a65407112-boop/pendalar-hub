@@ -203,6 +203,11 @@ namespace ClassicUs.OfficialRolesBackport
         private static readonly List<byte> Targets = new();
         private static int _targetIndex;
 
+        private static readonly SimpleHudButton TargetButton = new();
+        private static readonly SimpleHudButton RefreshButton = new();
+        private static readonly SimpleHudButton SendButton = new();
+        private static readonly SimpleHudButton CancelButton = new();
+
         public static bool CanCompose()
         {
             var local = PlayerControl.LocalPlayer;
@@ -227,6 +232,7 @@ namespace ClassicUs.OfficialRolesBackport
             foreach (var p in PlayerControl.AllPlayerControls)
                 if (p != null && p.Data != null && !p.Data.IsDead && !p.Data.Disconnected)
                     Targets.Add(p.Data.PlayerId);
+            if (_targetIndex >= Targets.Count) _targetIndex = 0;
         }
 
         private static void RefreshCards()
@@ -235,16 +241,60 @@ namespace ClassicUs.OfficialRolesBackport
                 Picks[i] = (byte)UnityEngine.Random.Range(0, Cards.Length);
         }
 
+        private static void CycleTarget()
+        {
+            BuildTargets();
+            if (Targets.Count == 0) return;
+            _targetIndex = (_targetIndex + 1) % Targets.Count;
+            Render();
+        }
+
+        private static void DoRefresh()
+        {
+            if (_refreshes <= 0) return;
+            _refreshes--;
+            RefreshCards();
+            Render();
+        }
+
+        private static void DoSend()
+        {
+            BuildTargets();
+            if (Targets.Count == 0) return;
+            if (_targetIndex >= Targets.Count) _targetIndex = 0;
+            var local = PlayerControl.LocalPlayer;
+            if (local?.Data == null) return;
+
+            byte target = Targets[_targetIndex];
+            Send(local.Data.PlayerId, target, Picks[0], Picks[1], Picks[2]);
+            Cancel();
+        }
+
         private static void Render()
         {
-            if (!_composing) { Overlay.Hide("InfluencerCompose"); return; }
-            if (Targets.Count == 0) BuildTargets();
-            string target = Targets.Count == 0 ? "nobody" : Players.Name(Targets[Mathf.Clamp(_targetIndex, 0, Targets.Count - 1)]);
+            if (!_composing)
+            {
+                HideButtons();
+                Overlay.Hide("InfluencerCompose");
+                return;
+            }
+
+            BuildTargets();
+            string target = Targets.Count == 0 ? "nobody" : Players.Name(Targets[_targetIndex]);
             Overlay.Persistent("InfluencerCompose",
                 "INFLUENCER\nTarget: " + target +
-                "\n[1] " + Cards[Picks[0]] + "   [2] " + Cards[Picks[1]] + "   [3] " + Cards[Picks[2]] +
-                "\nTAB target   R refresh (" + _refreshes + ")   ENTER send   ESC cancel",
+                "\n[" + Cards[Picks[0]] + "]   [" + Cards[Picks[1]] + "]   [" + Cards[Picks[2]] + "]" +
+                "\nCycle target / Refresh (" + _refreshes + ") / Send",
                 0.9f, 1.3f);
+
+            TargetButton.Show("InfluencerTarget", RoleIconFactory.Get("influencer_target", new Color(0.55f, 0.85f, 1f, 1f)),
+                AbilityButtonGrid.SlotB, CycleTarget);
+            RefreshButton.Show("InfluencerRefresh", RoleIconFactory.Get("influencer_refresh", new Color(0.7f, 1f, 0.7f, 1f)),
+                AbilityButtonGrid.SlotC, DoRefresh);
+            SendButton.Show("InfluencerSend", RoleIconFactory.Get("influencer_send", new Color(1f, 0.55f, 0.85f, 1f)),
+                AbilityButtonGrid.SlotA, DoSend);
+            CancelButton.Show("InfluencerCancel", RoleIconFactory.Get("influencer_cancel", new Color(1f, 0.4f, 0.4f, 1f)),
+                new Vector3(2.7f, 2.65f, 0f), Cancel);
         }
 
         public static void Tick()
@@ -256,33 +306,7 @@ namespace ClassicUs.OfficialRolesBackport
                 return;
             }
 
-            if (Input.GetKeyDown(KeyCode.Tab) && Targets.Count > 0)
-            {
-                _targetIndex = (_targetIndex + 1) % Targets.Count;
-                Render();
-            }
-
-            if (Input.GetKeyDown(KeyCode.R) && _refreshes > 0)
-            {
-                _refreshes--;
-                RefreshCards();
-                Render();
-            }
-
-            if (Input.GetKeyDown(KeyCode.Escape))
-            {
-                Cancel();
-                return;
-            }
-
-            if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter))
-            {
-                if (Targets.Count == 0) return;
-                var local = PlayerControl.LocalPlayer;
-                byte target = Targets[Mathf.Clamp(_targetIndex, 0, Targets.Count - 1)];
-                Send(local.Data.PlayerId, target, Picks[0], Picks[1], Picks[2]);
-                Cancel();
-            }
+            Render();
         }
 
         private static void Send(byte influencerId, byte targetId, byte a, byte b, byte c)
@@ -332,10 +356,19 @@ namespace ClassicUs.OfficialRolesBackport
                 8f, 1.3f, 1.8f);
         }
 
+        private static void HideButtons()
+        {
+            TargetButton.Hide();
+            RefreshButton.Hide();
+            SendButton.Hide();
+            CancelButton.Hide();
+        }
+
         private static void Cancel()
         {
             _composing = false;
             Targets.Clear();
+            HideButtons();
             Overlay.Hide("InfluencerCompose");
         }
 
@@ -344,7 +377,12 @@ namespace ClassicUs.OfficialRolesBackport
             _composing = false;
             _refreshes = 0;
             Targets.Clear();
+            TargetButton.Destroy();
+            RefreshButton.Destroy();
+            SendButton.Destroy();
+            CancelButton.Destroy();
             Overlay.Hide("InfluencerCompose");
         }
     }
+
 }
