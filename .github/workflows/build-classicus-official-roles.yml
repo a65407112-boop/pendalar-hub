@@ -50,6 +50,28 @@ jobs:
               print(s)
               raise SystemExit("Could not locate ManuAPI Harmony startup block")
           p.write_text(s2, encoding="utf-8")
+
+          rp = Path("vendor/ClassicUs.ManuAPI/ManuAPI/Roles/RoleRegistry.cs")
+          rs = rp.read_text(encoding="utf-8")
+          rs = rs.replace("if (!ManactorAPI.IsFromHost(senderId))", "if (!IsFromHostCompat(senderId))")
+          marker = "        private static PlayerControl FindPlayer(byte playerId)"
+          helper = """        private static bool IsFromHostCompat(byte senderId)
+        {
+            var client = AmongUsClient.Instance;
+            if (client == null) return false;
+            foreach (var p in PlayerControl.AllPlayerControls)
+            {
+                if (p == null || p.Data == null || p.Data.PlayerId != senderId) continue;
+                return p.OwnerId == client.HostId;
+            }
+            return false;
+        }
+
+"""
+          if marker not in rs:
+              raise SystemExit("Could not locate RoleRegistry FindPlayer marker")
+          rs = rs.replace(marker, helper + marker, 1)
+          rp.write_text(rs, encoding="utf-8")
           PY
           dotnet restore vendor/ClassicUs.ManuAPI/ManuAPI/ManuAPI.csproj
           dotnet build vendor/ClassicUs.ManuAPI/ManuAPI/ManuAPI.csproj -c Release --no-restore
