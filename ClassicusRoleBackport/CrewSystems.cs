@@ -136,7 +136,7 @@ namespace ClassicUs.OfficialRolesBackport
         [ManactorRpc(AlertRpc)]
         private static void OnAlertRpc(byte senderId, byte victimId)
         {
-            if (!ManactorAPI.IsFromHost(senderId)) return;
+            if (!NetworkAuth.IsFromHost(senderId)) return;
             ApplyAlert(victimId);
         }
 
@@ -191,7 +191,7 @@ namespace ClassicUs.OfficialRolesBackport
         [ManactorRpc(CaseRpc)]
         private static void OnCaseRpc(byte senderId, int caseId, byte victimId)
         {
-            if (!ManactorAPI.IsFromHost(senderId)) return;
+            if (!NetworkAuth.IsFromHost(senderId)) return;
             ApplyCase(caseId, victimId);
         }
 
@@ -250,7 +250,7 @@ namespace ClassicUs.OfficialRolesBackport
         [ManactorRpc(ResultRpc)]
         private static void OnResultRpc(byte senderId, byte detectiveId, byte suspectId, byte victimId, bool near, byte remaining)
         {
-            if (!ManactorAPI.IsFromHost(senderId)) return;
+            if (!NetworkAuth.IsFromHost(senderId)) return;
             ApplyResult(detectiveId, suspectId, victimId, near, remaining);
         }
 
@@ -407,7 +407,7 @@ namespace ClassicUs.OfficialRolesBackport
         [ManactorRpc(ResultRpc)]
         private static void OnResult(byte senderId, byte judgeId, byte ejectedId, bool correct)
         {
-            if (!ManactorAPI.IsFromHost(senderId)) return;
+            if (!NetworkAuth.IsFromHost(senderId)) return;
             ApplyResult(judgeId, ejectedId, correct);
         }
 
