@@ -65,6 +65,7 @@ jobs:
           curl -L --fail -o dist/BepInEx/plugins/OfficialRolesBackport/ClassicUs.Manactor.dll https://github.com/TechDevOfficial/ClassicUs.Manactor/releases/download/v1.2.0/ClassicUs.Manactor.dll
           cp vendor/ClassicUs.ManuAPI/ManuAPI/bin/Release/ClassicUs.ManuAPI.dll dist/BepInEx/plugins/OfficialRolesBackport/
           cp ClassicusRoleBackport/Extract-OfficialAssets.ps1 dist/BepInEx/plugins/OfficialRolesBackport/
+          cp ClassicusRoleBackport/Extract-OfficialAssets.cmd dist/BepInEx/plugins/OfficialRolesBackport/
           cp ClassicusRoleBackport/README.md dist/
 
       - name: Upload mod package
