@@ -12,7 +12,7 @@ Implemented roles:
 Important design choice:
 - Gameplay is recreated for the old client instead of trying to inject modern v19.0.0 IL2CPP classes directly. Modern role classes depend on game systems that do not exist in the old client.
 - Networking is host-authoritative through Manactor named RPCs so every modded Classic Us client sees the same results.
-- The package does not redistribute Innersloth artwork/audio. Instead, v0.2.0 can read matching role art from the user's own current Among Us installation. It first checks local extracted images, then scans local modern Addressables bundles, and falls back to generated icons only if no match is found.
+- The package does not redistribute Innersloth artwork/audio. v0.3.0 resolves assets from the user's own current Among Us installation by following the exact serialized Unity GUID + fileID references from each role object. There is no filename scoring, substring matching, or 'best match' selection.
 
 Installation:
 1. Install a working IL2CPP BepInEx setup for Classic Us.
@@ -40,7 +40,7 @@ Role behavior:
 Current compatibility limitations:
 - Shapeshifter copies name, color, hat, skin and pet. Classic Us 2026.9.20's exposed player API predates the modern visor field, so visor copying is not available in this target.
 - Tracker uses a direction/distance HUD instead of opening the modern map tracker panel.
-- Influencer gameplay currently uses the reconstructed card-selection layout; when matching local modern assets are found, the mod uses those local sprites for role/ability visuals. The exact v19 card-screen layout is still being backported.
+- Influencer gameplay currently uses the reconstructed card-selection layout. v0.3.0 extracts only assets that can be traced exactly from the modern serialized role objects. exact-missing.tsv lists anything that still needs a dedicated visual-behaviour port.
 - Judge uses number keys 1-9 in the meeting overlay instead of the modern v18 UI.
 - Detective clues are reconstructed from player distance at the murder moment rather than the exact v17 notebook implementation.
 
