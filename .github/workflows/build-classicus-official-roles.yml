@@ -1,0 +1,40 @@
+name: Build Classic Us Official Roles Backport
+
+on:
+  push:
+    branches:
+      - classicus-official-roles-backport
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: classicus-official-roles-backport
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '6.0.x'
+
+      - name: Restore and build
+        run: |
+          dotnet restore ClassicusRoleBackport/ClassicUs.OfficialRolesBackport.csproj
+          dotnet build ClassicusRoleBackport/ClassicUs.OfficialRolesBackport.csproj -c Release --no-restore
+
+      - name: Assemble install folder
+        run: |
+          mkdir -p dist/BepInEx/plugins/OfficialRolesBackport
+          cp ClassicusRoleBackport/bin/Release/ClassicUs.OfficialRolesBackport.dll dist/BepInEx/plugins/OfficialRolesBackport/
+          curl -L --fail -o dist/BepInEx/plugins/OfficialRolesBackport/ClassicUs.Manactor.dll https://github.com/TechDevOfficial/ClassicUs.Manactor/releases/download/v1.2.0/ClassicUs.Manactor.dll
+          curl -L --fail -o dist/BepInEx/plugins/OfficialRolesBackport/ClassicUs.ManuAPI.dll https://github.com/TechDevOfficial/ClassicUs.ManuAPI/releases/download/v1.5.3/ClassicUs.ManuAPI.dll
+          cp ClassicusRoleBackport/README.md dist/
+
+      - name: Upload mod package
+        uses: actions/upload-artifact@v4
+        with:
+          name: ClassicUs-OfficialRolesBackport
+          path: dist/
+          if-no-files-found: error
