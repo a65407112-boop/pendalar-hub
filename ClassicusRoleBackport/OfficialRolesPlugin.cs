@@ -17,7 +17,7 @@ namespace ClassicUs.OfficialRolesBackport
     {
         public const string Guid = "classicus.officialroles.backport";
         public const string ModName = "ClassicUsOfficialRolesBackport";
-        public const string Version = "0.2.0";
+        public const string Version = "0.3.0";
 
         public static ManualLogSource Log;
 
@@ -66,7 +66,7 @@ namespace ClassicUs.OfficialRolesBackport
 
             new Harmony(Guid).PatchAll(typeof(OfficialRolesPlugin).Assembly);
 
-            Log.LogInfo("Official Roles Backport 0.2.0 loaded: Scientist, Engineer, Tracker, Noisemaker, Detective, Judge, " +
+            Log.LogInfo("Official Roles Backport 0.3.0 loaded: Scientist, Engineer, Tracker, Noisemaker, Detective, Judge, " +
                         "Guardian Angel, Influencer, Shapeshifter, Phantom, Viper.");
         }
 
