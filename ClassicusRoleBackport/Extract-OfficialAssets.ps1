@@ -74,9 +74,23 @@ New-Item -ItemType Directory -Force -Path $ExportDir | Out-Null
 
 Write-Host "Extracting primary assets from your installed Among Us copy."
 Write-Host "This can take a while and can temporarily use several GB of disk space."
-& $RipperExe.FullName --cli -i $ModernContent -o $ExportDir -m raw --script-content-level Level2 --ignore-streaming-assets false
-if ($LASTEXITCODE -ne 0) {
-    throw "AssetRipper failed with exit code $LASTEXITCODE."
+# AssetRipper GUI.Free v1.0.1 uses 'primary' for raw/primary-content export.
+# Nullable bool options such as --ignore-streaming-assets are intentionally omitted here:
+# the Windows release parser treats a trailing 'false' as an extra positional argument.
+$RipperArgs = @(
+    "--cli",
+    "--input", $ModernContent,
+    "--output", $ExportDir,
+    "--mode", "primary",
+    "--script-content-level", "Level2"
+)
+
+& $RipperExe.FullName @RipperArgs
+$RipperExit = $LASTEXITCODE
+
+$AnyExport = Get-ChildItem $ExportDir -Recurse -File -ErrorAction SilentlyContinue | Select-Object -First 1
+if ($RipperExit -ne 0 -or -not $AnyExport) {
+    throw "AssetRipper did not produce an export. Exit code: $RipperExit. Check the AssetRipper text above for the first real error."
 }
 
 $Terms = @(
