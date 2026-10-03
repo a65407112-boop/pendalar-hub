@@ -29,17 +29,45 @@ if (-not (Test-Path (Join-Path $ModernContent "Among Us_Data"))) {
 New-Item -ItemType Directory -Force -Path $WorkDir | Out-Null
 New-Item -ItemType Directory -Force -Path $OutputDir | Out-Null
 
-$RipperExe = Get-ChildItem $RipperDir -Recurse -Filter "AssetRipper.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
+function Find-AssetRipperExe {
+    param([string]$Root)
+
+    if (-not (Test-Path $Root)) { return $null }
+
+    $preferred = @(
+        "AssetRipper.GUI.Free.exe",
+        "AssetRipper.exe"
+    )
+
+    foreach ($name in $preferred) {
+        $hit = Get-ChildItem $Root -Recurse -File -Filter $name -ErrorAction SilentlyContinue | Select-Object -First 1
+        if ($hit) { return $hit }
+    }
+
+    return Get-ChildItem $Root -Recurse -File -Filter "*.exe" -ErrorAction SilentlyContinue |
+        Where-Object { $_.Name -like "AssetRipper*.exe" } |
+        Select-Object -First 1
+}
+
+$RipperExe = Find-AssetRipperExe $RipperDir
 if (-not $RipperExe) {
     Write-Host "Downloading AssetRipper CLI..."
     Invoke-WebRequest -Uri $RipperUrl -OutFile $ZipPath
     if (Test-Path $RipperDir) { Remove-Item $RipperDir -Recurse -Force }
     Expand-Archive -Path $ZipPath -DestinationPath $RipperDir -Force
-    $RipperExe = Get-ChildItem $RipperDir -Recurse -Filter "AssetRipper.exe" | Select-Object -First 1
+    $RipperExe = Find-AssetRipperExe $RipperDir
 }
 if (-not $RipperExe) {
-    throw "AssetRipper.exe was not found after extraction."
+    Write-Host ""
+    Write-Host "Files extracted from AssetRipper package:"
+    Get-ChildItem $RipperDir -Recurse -File -ErrorAction SilentlyContinue |
+        Select-Object -First 50 -ExpandProperty FullName |
+        ForEach-Object { Write-Host "  $_" }
+    throw "No AssetRipper executable was found after extraction."
 }
+
+Write-Host "Using AssetRipper executable:"
+Write-Host "  $($RipperExe.FullName)"
 
 if (Test-Path $ExportDir) { Remove-Item $ExportDir -Recurse -Force }
 New-Item -ItemType Directory -Force -Path $ExportDir | Out-Null
