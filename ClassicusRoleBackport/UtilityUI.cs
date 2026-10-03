@@ -182,4 +182,90 @@ namespace ClassicUs.OfficialRolesBackport
             _hadColor = false;
         }
     }
+
+    internal static class NetworkAuth
+    {
+        public static bool IsFromHost(byte senderPlayerId)
+        {
+            var client = AmongUsClient.Instance;
+            if (client == null) return false;
+            foreach (var p in PlayerControl.AllPlayerControls)
+            {
+                if (p == null || p.Data == null || p.Data.PlayerId != senderPlayerId) continue;
+                return p.OwnerId == client.HostId;
+            }
+            return false;
+        }
+    }
+
+    internal sealed class SimpleHudButton
+    {
+        private GameObject _go;
+        private SpriteRenderer _renderer;
+        private PassiveButton _passive;
+
+        public bool Exists => _go != null;
+
+        public void Show(string name, Sprite icon, Vector3 distanceFromEdge, System.Action onClick)
+        {
+            var hud = HudManager.Instance;
+            if (hud == null || hud.KillButton == null) return;
+
+            if (_go == null)
+            {
+                var clone = UnityEngine.Object.Instantiate(hud.KillButton.gameObject, hud.transform);
+                clone.name = name;
+
+                var cluster = hud.KillButton.gameObject.transform.parent;
+                var clusterAnchor = cluster != null ? cluster.GetComponentInParent<AspectPosition>() : null;
+                var aspect = clone.GetComponent<AspectPosition>();
+                if (aspect == null) aspect = clone.AddComponent<AspectPosition>();
+                aspect.parentCam = clusterAnchor != null ? clusterAnchor.parentCam : hud.UICamera;
+                aspect.Alignment = AspectPosition.EdgeAlignments.LeftBottom;
+                aspect.DistanceFromEdge = distanceFromEdge;
+                aspect.updateAlways = true;
+                aspect.AdjustPosition();
+
+                foreach (var comp in clone.GetComponentsInChildren<MonoBehaviour>(true))
+                {
+                    if (comp == null) continue;
+                    if (comp.TryCast<PassiveButton>() != null) continue;
+                    if (comp.TryCast<TextMeshPro>() != null) continue;
+                    if (comp.TryCast<AspectPosition>() != null) continue;
+                    comp.enabled = false;
+                    UnityEngine.Object.Destroy(comp);
+                }
+
+                _go = clone;
+                _renderer = clone.GetComponent<SpriteRenderer>();
+                if (_renderer == null) _renderer = clone.AddComponent<SpriteRenderer>();
+                _passive = clone.GetComponentInChildren<PassiveButton>();
+                foreach (var t in clone.GetComponentsInChildren<TextMeshPro>())
+                    if (t != null) t.text = string.Empty;
+            }
+
+            if (_renderer != null && icon != null) _renderer.sprite = icon;
+            if (_passive != null && _passive.OnClick != null)
+            {
+                _passive.OnClick.RemoveAllListeners();
+                _passive.OnClick.AddListener((UnityEngine.Events.UnityAction)(() => onClick?.Invoke()));
+            }
+
+            _go.SetActive(true);
+        }
+
+        public void Hide()
+        {
+            if (_go != null) _go.SetActive(false);
+        }
+
+        public void Destroy()
+        {
+            if (_go != null) UnityEngine.Object.Destroy(_go);
+            _go = null;
+            _renderer = null;
+            _passive = null;
+        }
+    }
+
 }
