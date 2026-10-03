@@ -21,7 +21,7 @@ Installation:
 4. Start Classic Us. Role counts/chances appear in the game settings menu.
 
 Role behavior:
-- Scientist: portable vitals overlay; battery drains while open and tasks recharge it.
+- Scientist: portable vitals overlay; battery drains while open, tasks recharge it, and meetings close the panel without refilling the battery.
 - Engineer: can vent as a Crewmate.
 - Tracker: tracks the nearest selected living player for 30 seconds.
 - Noisemaker: alerts living players when murdered.
@@ -34,7 +34,7 @@ Role behavior:
 - Viper: killed bodies dissolve in stages and eventually disappear.
 
 Current clean-room limitations:
-- Shapeshifter currently copies name/color, not every cosmetic. This is deliberately conservative for Classic Us compatibility.
+- Shapeshifter copies name, color, hat, skin and pet. Classic Us 2026.9.20's exposed player API predates the modern visor field, so visor copying is not available in this target.
 - Tracker uses a direction/distance HUD instead of opening the modern map tracker panel.
 - Influencer uses generated text cards rather than copyrighted modern image assets.
 - Judge uses number keys 1-9 in the meeting overlay instead of the modern v18 UI.
