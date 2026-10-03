@@ -12,13 +12,17 @@ Implemented roles:
 Important design choice:
 - Gameplay is recreated for the old client instead of trying to inject modern v19.0.0 IL2CPP classes directly. Modern role classes depend on game systems that do not exist in the old client.
 - Networking is host-authoritative through Manactor named RPCs so every modded Classic Us client sees the same results.
-- No Innersloth artwork/audio is redistributed. Ability icons are generated at runtime from clean-room geometric glyphs.
+- The package does not redistribute Innersloth artwork/audio. Instead, v0.2.0 can read matching role art from the user's own current Among Us installation. It first checks local extracted images, then scans local modern Addressables bundles, and falls back to generated icons only if no match is found.
 
 Installation:
 1. Install a working IL2CPP BepInEx setup for Classic Us.
 2. Copy the included BepInEx folder over your Classic Us directory.
 3. Make sure every player in the lobby has the same mod version.
-4. Start Classic Us. Role counts/chances appear in the game settings menu.
+4. Optional but recommended for matching modern visuals: run BepInEx\\plugins\\OfficialRolesBackport\\Extract-OfficialAssets.cmd. It defaults to C:\\XboxGames\\Among Us\\Content and extracts role-related art from your own installed copy into the plugin's OfficialAssets folder.
+5. Start Classic Us. Role counts/chances appear in the game settings menu.
+
+Compatibility note for 2026.9.20:
+- The packaged ClassicUs.ManuAPI.dll is a compatibility build of ManuAPI 1.5.3. The upstream 1.5.3 build hard-patches RoleManager.Start, but that method is absent in Classic Us 2026.9.20. This package patches ManuAPI classes individually, skipping only targets that do not exist instead of aborting the entire API load.
 
 Role behavior:
 - Scientist: portable vitals overlay; battery drains while open, tasks recharge it, and meetings close the panel without refilling the battery.
@@ -33,10 +37,10 @@ Role behavior:
 - Phantom: becomes invisible for a limited time.
 - Viper: killed bodies dissolve in stages and eventually disappear.
 
-Current clean-room limitations:
+Current compatibility limitations:
 - Shapeshifter copies name, color, hat, skin and pet. Classic Us 2026.9.20's exposed player API predates the modern visor field, so visor copying is not available in this target.
 - Tracker uses a direction/distance HUD instead of opening the modern map tracker panel.
-- Influencer uses generated text cards rather than copyrighted modern image assets.
+- Influencer gameplay currently uses the reconstructed card-selection layout; when matching local modern assets are found, the mod uses those local sprites for role/ability visuals. The exact v19 card-screen layout is still being backported.
 - Judge uses number keys 1-9 in the meeting overlay instead of the modern v18 UI.
 - Detective clues are reconstructed from player distance at the murder moment rather than the exact v17 notebook implementation.
 
