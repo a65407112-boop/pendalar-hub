@@ -37,7 +37,7 @@ namespace ClassicUs.OfficialRolesBackport
         [ManactorRpc(StartRpc)]
         private static void OnStart(byte senderId, byte playerId, float seconds)
         {
-            if (!ManactorAPI.IsFromHost(senderId)) return;
+            if (!NetworkAuth.IsFromHost(senderId)) return;
             Start(playerId, seconds, false);
         }
 
@@ -142,7 +142,7 @@ namespace ClassicUs.OfficialRolesBackport
         [ManactorRpc(StartRpc)]
         private static void OnStart(byte senderId, byte shifterId, byte targetId, float duration)
         {
-            if (!ManactorAPI.IsFromHost(senderId)) return;
+            if (!NetworkAuth.IsFromHost(senderId)) return;
             Start(shifterId, targetId, duration);
         }
 
@@ -180,7 +180,7 @@ namespace ClassicUs.OfficialRolesBackport
         [ManactorRpc(EndRpc)]
         private static void OnEnd(byte senderId, byte shifterId)
         {
-            if (!ManactorAPI.IsFromHost(senderId)) return;
+            if (!NetworkAuth.IsFromHost(senderId)) return;
             Restore(Players.Find(shifterId));
             States.Remove(shifterId);
         }
@@ -246,7 +246,7 @@ namespace ClassicUs.OfficialRolesBackport
         [ManactorRpc(StartRpc)]
         private static void OnStart(byte senderId, byte victimId, float duration)
         {
-            if (!ManactorAPI.IsFromHost(senderId)) return;
+            if (!NetworkAuth.IsFromHost(senderId)) return;
             Start(victimId, duration);
         }
 
