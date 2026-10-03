@@ -47,6 +47,13 @@ namespace ClassicUs.OfficialRolesBackport
 
         private static void Assign(byte playerId, GhostRoleKind role, bool broadcast)
         {
+            if (Roles.TryGetValue(playerId, out var existing))
+            {
+                if (existing == role) return;
+                if (existing == GhostRoleKind.GuardianAngel) _guardianCount = Mathf.Max(0, _guardianCount - 1);
+                if (existing == GhostRoleKind.Influencer) _influencerCount = Mathf.Max(0, _influencerCount - 1);
+            }
+
             Roles[playerId] = role;
             if (role == GhostRoleKind.GuardianAngel) _guardianCount++;
             if (role == GhostRoleKind.Influencer) _influencerCount++;
