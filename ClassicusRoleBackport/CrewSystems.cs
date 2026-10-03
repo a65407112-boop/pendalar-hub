@@ -362,7 +362,7 @@ namespace ClassicUs.OfficialRolesBackport
 
             for (int i = 0; i < shown; i++)
             {
-                KeyCode key = KeyCode.Alpha1 + i;
+                KeyCode key = (KeyCode)((int)KeyCode.Alpha1 + i);
                 if (Input.GetKeyDown(key))
                 {
                     Request(judgeId, _targets[i]);
