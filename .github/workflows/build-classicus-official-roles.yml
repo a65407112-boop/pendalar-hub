@@ -9,7 +9,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
         with:
@@ -19,7 +19,40 @@ jobs:
         with:
           dotnet-version: '6.0.x'
 
-      - name: Restore and build
+      - name: Build patched ManuAPI for Classic Us 2026.9.20
+        run: |
+          git clone --depth 1 https://github.com/TechDevOfficial/ClassicUs.ManuAPI.git vendor/ClassicUs.ManuAPI
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path("vendor/ClassicUs.ManuAPI/ManuAPI/Core/ManuAPIPlugin.cs")
+          s = p.read_text(encoding="utf-8")
+          if "using System;" not in s:
+              s = "using System;\n" + s
+          old = """            var harmony = new Harmony(Guid);
+            harmony.PatchAll();
+            Il2CppInteropCompat.Apply(harmony);"""
+          new = """            var harmony = new Harmony(Guid);
+            foreach (var type in typeof(ManuAPIPlugin).Assembly.GetTypes())
+            {
+                if (type.GetCustomAttributes(typeof(HarmonyPatch), true).Length == 0) continue;
+                try
+                {
+                    harmony.CreateClassProcessor(type).Patch();
+                }
+                catch (Exception e)
+                {
+                    Log.LogWarning("Skipping incompatible ManuAPI patch " + type.FullName + ": " + e.Message);
+                }
+            }
+            Il2CppInteropCompat.Apply(harmony);"""
+          if old not in s:
+              raise SystemExit("ManuAPI Load() block changed upstream; refusing a blind patch")
+          p.write_text(s.replace(old, new), encoding="utf-8")
+          PY
+          dotnet restore vendor/ClassicUs.ManuAPI/ManuAPI/ManuAPI.csproj
+          dotnet build vendor/ClassicUs.ManuAPI/ManuAPI/ManuAPI.csproj -c Release --no-restore
+
+      - name: Restore and build role backport
         run: |
           dotnet restore ClassicusRoleBackport/ClassicUs.OfficialRolesBackport.csproj
           dotnet build ClassicusRoleBackport/ClassicUs.OfficialRolesBackport.csproj -c Release --no-restore
@@ -29,7 +62,8 @@ jobs:
           mkdir -p dist/BepInEx/plugins/OfficialRolesBackport
           cp ClassicusRoleBackport/bin/Release/ClassicUs.OfficialRolesBackport.dll dist/BepInEx/plugins/OfficialRolesBackport/
           curl -L --fail -o dist/BepInEx/plugins/OfficialRolesBackport/ClassicUs.Manactor.dll https://github.com/TechDevOfficial/ClassicUs.Manactor/releases/download/v1.2.0/ClassicUs.Manactor.dll
-          curl -L --fail -o dist/BepInEx/plugins/OfficialRolesBackport/ClassicUs.ManuAPI.dll https://github.com/TechDevOfficial/ClassicUs.ManuAPI/releases/download/v1.5.3/ClassicUs.ManuAPI.dll
+          cp vendor/ClassicUs.ManuAPI/ManuAPI/bin/Release/ClassicUs.ManuAPI.dll dist/BepInEx/plugins/OfficialRolesBackport/
+          cp ClassicusRoleBackport/Extract-OfficialAssets.ps1 dist/BepInEx/plugins/OfficialRolesBackport/
           cp ClassicusRoleBackport/README.md dist/
 
       - name: Upload mod package
