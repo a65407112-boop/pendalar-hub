@@ -21,7 +21,8 @@ jobs:
 
       - name: Build patched ManuAPI for Classic Us 2026.9.20
         run: |
-          git clone --depth 1 https://github.com/TechDevOfficial/ClassicUs.ManuAPI.git vendor/ClassicUs.ManuAPI
+          git clone https://github.com/TechDevOfficial/ClassicUs.ManuAPI.git vendor/ClassicUs.ManuAPI
+          git -C vendor/ClassicUs.ManuAPI checkout a633653f6eff00cba73eafb2da8dad14eb060b53
           python3 - <<'PY'
           from pathlib import Path
           p = Path("vendor/ClassicUs.ManuAPI/ManuAPI/Core/ManuAPIPlugin.cs")
