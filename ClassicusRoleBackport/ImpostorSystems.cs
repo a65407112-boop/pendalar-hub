@@ -192,10 +192,9 @@ namespace ClassicUs.OfficialRolesBackport
             {
                 shifter.RawSetColor(target.Data.ColorId);
                 shifter.RawSetName(target.Data.PlayerName);
-                shifter.RawSetHat(target.Data.HatId, target.Data.ColorId);
-                shifter.RawSetSkin(target.Data.SkinId, target.Data.ColorId);
-                shifter.RawSetPet(target.Data.PetId, target.Data.ColorId);
-                shifter.RawSetVisor(target.Data.VisorId, target.Data.ColorId);
+                shifter.RawSetHat(target.Data.HatId);
+                shifter.RawSetSkin(target.Data.SkinId);
+                shifter.RawSetPet(target.Data.PetId);
             }
             catch (Exception e)
             {
@@ -210,10 +209,9 @@ namespace ClassicUs.OfficialRolesBackport
             {
                 shifter.RawSetColor(shifter.Data.ColorId);
                 shifter.RawSetName(shifter.Data.PlayerName);
-                shifter.RawSetHat(shifter.Data.HatId, shifter.Data.ColorId);
-                shifter.RawSetSkin(shifter.Data.SkinId, shifter.Data.ColorId);
-                shifter.RawSetPet(shifter.Data.PetId, shifter.Data.ColorId);
-                shifter.RawSetVisor(shifter.Data.VisorId, shifter.Data.ColorId);
+                shifter.RawSetHat(shifter.Data.HatId);
+                shifter.RawSetSkin(shifter.Data.SkinId);
+                shifter.RawSetPet(shifter.Data.PetId);
             }
             catch (Exception e)
             {
